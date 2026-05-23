@@ -1,0 +1,88 @@
+export const theme = {
+  color: {
+    bg: '#FFFFFF',
+    surface: '#FAFAFA',
+    surface2: '#F4F4F5',
+    surface3: '#EEEEF0',
+    border: '#E4E4E7',
+    borderStrong: '#D4D4D8',
+    text: '#0A0A0A',
+    textSoft: '#3F3F46',
+    muted: '#71717A',
+    mutedSoft: '#A1A1AA',
+    accent: '#5B5BD6',
+    accentHover: '#4F4FBF',
+    accentSoft: '#EEF0FF',
+    accentBorder: '#D8DCFF',
+    info: '#2563EB',
+    infoSoft: '#EFF6FF',
+    success: '#16A34A',
+    successSoft: '#ECFDF5',
+    warning: '#D97706',
+    warningSoft: '#FFFBEB',
+    danger: '#DC2626',
+    dangerSoft: '#FEF2F2',
+    onAccent: '#FFFFFF',
+  },
+  font: {
+    sans: `"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`,
+    mono: `"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace`,
+  },
+  fontSize: {
+    h1: '56px',
+    h2: '40px',
+    h3: '28px',
+    h4: '20px',
+    body: '16px',
+    small: '14px',
+    label: '13px',
+    code: '13px',
+  },
+  lineHeight: {
+    tight: 1.1,
+    snug: 1.25,
+    normal: 1.5,
+    relaxed: 1.65,
+  },
+  weight: {
+    regular: 400,
+    medium: 500,
+    semibold: 600,
+    bold: 700,
+  },
+  space: {
+    1: '4px',
+    2: '8px',
+    3: '12px',
+    4: '16px',
+    5: '24px',
+    6: '32px',
+    7: '48px',
+    8: '64px',
+    9: '96px',
+    10: '128px',
+  },
+  radius: {
+    sm: '6px',
+    md: '10px',
+    lg: '14px',
+    pill: '999px',
+  },
+  shadow: {
+    xs: '0 1px 2px rgba(16, 24, 40, 0.04)',
+    sm: '0 1px 3px rgba(16, 24, 40, 0.06), 0 1px 2px rgba(16, 24, 40, 0.04)',
+    md: '0 4px 12px rgba(16, 24, 40, 0.06), 0 2px 4px rgba(16, 24, 40, 0.04)',
+    lg: '0 12px 32px rgba(16, 24, 40, 0.08), 0 4px 8px rgba(16, 24, 40, 0.04)',
+  },
+  layout: {
+    maxWidth: '1200px',
+  },
+  transition: {
+    fast: '120ms ease',
+    base: '180ms ease',
+  },
+} as const
+
+export type AppTheme = typeof theme
+
+export const LovableTheme = theme

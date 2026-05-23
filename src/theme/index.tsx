@@ -1,3 +1,5 @@
+import { LovableTheme } from 'src/Analyra/lovable/v1/src/ui-kit/theme'
+
 const breakpoints = {
   xs: 480,
   sm: 768,
@@ -112,7 +114,8 @@ export const theme = {
     popover: 1100,
     tooltip: 1200,
   },
-}
+  ...LovableTheme,
+} as const
 
 export type Theme = typeof theme
 

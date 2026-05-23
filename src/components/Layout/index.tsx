@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react'
-import { useRouter } from 'next/router'
+// import { useRouter } from 'next/router'
 import {
   LayoutContentStyled,
   LayoutStyled,
@@ -11,12 +11,13 @@ import {
 import { SidebarMemo } from './Sidebar'
 import { ChatContent } from 'src/components/Chat/ChatWidget/ChatContent'
 import { ChatWidget } from '../Chat/ChatWidget'
+import { AnalyraGlobalStyle } from 'src/Analyra/lovable/v1/src/ui-kit/GlobalStyle'
 
 type LayoutProps = React.PropsWithChildren
 
 export const Layout: React.FC<LayoutProps> = ({ children, ...other }) => {
-  const router = useRouter()
-  const isHomePage = router.pathname === '/'
+  // const router = useRouter()
+  const isHomePage = false
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const toggleSidebar = useCallback(() => {
@@ -52,6 +53,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, ...other }) => {
       </LayoutMain>
 
       {!isHomePage && <ChatWidget />}
+
+      <AnalyraGlobalStyle />
     </LayoutStyled>
   )
 }

@@ -71,16 +71,18 @@ type LayoutContentStyledProps = {
 }
 
 export const LayoutContentStyled = styled.div<LayoutContentStyledProps>`
-  flex: 1;
+  /* flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: ${({ $isHomePage }) =>
     $isHomePage ? 'center' : 'flex-start'};
-  background: ${({ $isHomePage }) => ($isHomePage ? '#ffffff' : '#ffffff')};
+  background: ${({ $isHomePage }) => ($isHomePage ? '#ffffff' : '#ffffff')}; */
+
+  display: contents;
 `
 
 export const LayoutInnerContainer = styled.div`
-  width: 100%;
+  /* width: 100%;
   height: 100%;
   max-width: 1200px;
   margin: 0 auto;
@@ -91,7 +93,9 @@ export const LayoutInnerContainer = styled.div`
 
   @media (max-width: ${theme.breakpoints.md}px) {
     padding: 0 16px;
-  }
+  } */
+
+  display: contents;
 `
 
 export const LayoutMainContentStyled = styled.div`
