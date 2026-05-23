@@ -1,3 +1,4 @@
+/* eslint-disable react/no-array-index-key */
 import styled from 'styled-components'
 
 import {
@@ -8,7 +9,7 @@ import {
   Label,
   Small,
   Badge,
-  Button,
+  // Button,
   // Switch,
   ReportBlock,
   ScoreCard,
@@ -16,7 +17,7 @@ import {
   IssueCard,
   TaskItem,
   AIPanel,
-  MermaidDiagram,
+  // MermaidDiagram,
   GraphIcon,
   AlertIcon,
   GaugeIcon,
@@ -31,6 +32,9 @@ import {
   LinkIcon,
 } from '../../../lovable/v1/src/ui-kit'
 import Link from 'next/link'
+import { ReportPageProps } from './interfaces'
+import { Mermaid } from 'src/components/Mermaid'
+import React from 'react'
 
 /* ───────── Layout ───────── */
 
@@ -260,7 +264,7 @@ const reportDiagram = `flowchart LR
 
 /* ───────── Loading skeletons ───────── */
 
-const DiagramSkeleton = () => <Skeleton height={280} radius={12} />
+export const DiagramSkeleton = () => <Skeleton height={280} radius={12} />
 
 const IssuesSkeleton = () => (
   <StackStyled>
@@ -305,14 +309,10 @@ const MetricsSkeleton = () => (
 
 /* ───────── Page ───────── */
 
-type ReportPageProps = {
-  targetUrl: string
-  loading: boolean
-}
-
 export const ReportView: React.FC<ReportPageProps> = ({
   loading,
   targetUrl,
+  report,
 }) => {
   return (
     <PageStyled>
@@ -353,7 +353,8 @@ export const ReportView: React.FC<ReportPageProps> = ({
                 )}
               </UrlBarStyled>
             </TitleColStyled>
-            <div style={{ display: 'flex', gap: 10 }}>
+
+            {/* <div style={{ display: 'flex', gap: 10 }}>
               <Button variant="outline" size="md">
                 Экспорт PDF
               </Button>
@@ -364,7 +365,7 @@ export const ReportView: React.FC<ReportPageProps> = ({
               >
                 Создать задачи
               </Button>
-            </div>
+            </div> */}
           </TitleRowStyled>
         </Container>
       </TopBarStyled>
@@ -384,7 +385,7 @@ export const ReportView: React.FC<ReportPageProps> = ({
                 meta={<Badge kind="ai">AI score</Badge>}
               >
                 <ScoreGridStyled>
-                  <ScoreCard
+                  {/* <ScoreCard
                     label="UX"
                     score={72}
                     trend="+4 с прошлой проверки"
@@ -407,7 +408,11 @@ export const ReportView: React.FC<ReportPageProps> = ({
                     score={66}
                     trend="Средне"
                     tone="warning"
-                  />
+                  /> */}
+
+                  {report?.scores.map((n) => {
+                    return <ScoreCard key={n.label} {...n} />
+                  })}
                 </ScoreGridStyled>
               </ReportBlock>
             </Col12>
@@ -422,7 +427,7 @@ export const ReportView: React.FC<ReportPageProps> = ({
                 loadingSkeleton={<DiagramSkeleton />}
                 meta={<Badge kind="neutral">9 узлов · 11 переходов</Badge>}
               >
-                <MermaidDiagram source={reportDiagram} />
+                <Mermaid source={reportDiagram} />
               </ReportBlock>
             </Col8>
 
@@ -442,15 +447,14 @@ export const ReportView: React.FC<ReportPageProps> = ({
                   </StackStyled>
                 }
               >
-                <AIPanel title="Длинный путь до целевого действия">
-                  Пользователю нужно 4–5 переходов, прежде чем он попадает к
-                  форме заявки. Это главная причина низкой конверсии на текущем
-                  сайте.
-                </AIPanel>
-                <Text tone="muted">
-                  Сократите путь до 2 шагов: добавьте CTA на тарифах и в
-                  карточках кейсов.
-                </Text>
+                {report?.aiInsight ? (
+                  <>
+                    <AIPanel title={report.aiInsight.title}>
+                      {report.aiInsight.content}
+                    </AIPanel>
+                    <Text tone="muted">{report.aiInsight.recommendation}</Text>
+                  </>
+                ) : null}
               </ReportBlock>
             </Col4>
 
@@ -463,26 +467,17 @@ export const ReportView: React.FC<ReportPageProps> = ({
                 accent="danger"
                 loading={loading}
                 loadingSkeleton={<IssuesSkeleton />}
-                meta={<Badge kind="danger">3 критичных</Badge>}
+                meta={
+                  report?.uxIssues ? (
+                    <Badge kind="danger">
+                      {report.uxIssues.length} критичных
+                    </Badge>
+                  ) : undefined
+                }
               >
-                <IssueCard
-                  title="Слишком длинный путь до заявки"
-                  description="От главной до формы — 4 шага. Конкуренты делают это за 2."
-                  severity="high"
-                  location="/ → /pricing → /demo"
-                />
-                <IssueCard
-                  title="Скрытая ценность тарифов"
-                  description="Цены показываются только после клика по «Подробнее» — добавьте плашки на главной."
-                  severity="medium"
-                  location="/pricing"
-                />
-                <IssueCard
-                  title="Нет объяснения формы"
-                  description="Форма не объясняет, что произойдёт после отправки и за какой срок ответят."
-                  severity="medium"
-                  location="/demo"
-                />
+                {report?.uxIssues?.map((issue, i) => (
+                  <IssueCard key={i} {...issue} />
+                ))}
               </ReportBlock>
             </Col6>
 
@@ -494,24 +489,18 @@ export const ReportView: React.FC<ReportPageProps> = ({
                 icon={<SearchIcon size={18} />}
                 accent="info"
                 loading={loading}
-                meta={<Badge kind="success">Score 84</Badge>}
+                meta={
+                  report?.seo?.meta ? (
+                    <Badge kind="success">{report.seo.meta}</Badge>
+                  ) : undefined
+                }
               >
                 <ChecklistStyled>
-                  <ChecklistItemStyled $ok>
-                    Title и meta description заполнены
-                  </ChecklistItemStyled>
-                  <ChecklistItemStyled $ok>
-                    Корректный H1 на всех страницах
-                  </ChecklistItemStyled>
-                  <ChecklistItemStyled $ok={false}>
-                    Отсутствует Open Graph на /pricing и /blog/*
-                  </ChecklistItemStyled>
-                  <ChecklistItemStyled $ok={false}>
-                    Нет sitemap.xml — добавьте для лучшей индексации
-                  </ChecklistItemStyled>
-                  <ChecklistItemStyled $ok>
-                    robots.txt настроен корректно
-                  </ChecklistItemStyled>
+                  {report?.seo?.items.map((item, i) => (
+                    <ChecklistItemStyled key={i} $ok={item.ok}>
+                      {item.text}
+                    </ChecklistItemStyled>
+                  ))}
                 </ChecklistStyled>
               </ReportBlock>
             </Col6>
@@ -525,26 +514,23 @@ export const ReportView: React.FC<ReportPageProps> = ({
                 accent="warning"
                 loading={loading}
                 loadingSkeleton={<MetricsSkeleton />}
-                meta={<Badge kind="warning">Требует внимания</Badge>}
+                meta={
+                  report?.performance?.meta ? (
+                    <Badge kind="warning">{report.performance.meta}</Badge>
+                  ) : undefined
+                }
               >
                 <InlineMetricsStyled>
-                  <MetricStyled>
-                    <MetricValueStyled>2.8s</MetricValueStyled>
-                    <MetricLabelStyled>LCP · нужно &lt; 2.5s</MetricLabelStyled>
-                  </MetricStyled>
-                  <MetricStyled>
-                    <MetricValueStyled>0.12</MetricValueStyled>
-                    <MetricLabelStyled>CLS · норма</MetricLabelStyled>
-                  </MetricStyled>
-                  <MetricStyled>
-                    <MetricValueStyled>180ms</MetricValueStyled>
-                    <MetricLabelStyled>INP · норма</MetricLabelStyled>
-                  </MetricStyled>
+                  {report?.performance?.metrics.map((metric, i) => (
+                    <MetricStyled key={i}>
+                      <MetricValueStyled>{metric.value}</MetricValueStyled>
+                      <MetricLabelStyled>{metric.label}</MetricLabelStyled>
+                    </MetricStyled>
+                  ))}
                 </InlineMetricsStyled>
-                <Small tone="muted">
-                  Основная причина медленного LCP — невыжатые hero-изображения
-                  (3.2 МБ).
-                </Small>
+                {report?.performance?.note && (
+                  <Small tone="muted">{report.performance.note}</Small>
+                )}
               </ReportBlock>
             </Col6>
 
@@ -556,24 +542,18 @@ export const ReportView: React.FC<ReportPageProps> = ({
                 icon={<EyeIcon size={18} />}
                 accent="info"
                 loading={loading}
-                meta={<Badge kind="info">7 замечаний</Badge>}
+                meta={
+                  report?.accessibility?.meta ? (
+                    <Badge kind="info">{report.accessibility.meta}</Badge>
+                  ) : undefined
+                }
               >
                 <ChecklistStyled>
-                  <ChecklistItemStyled $ok={false}>
-                    Контраст текста &lt; 4.5:1 на 4 элементах
-                  </ChecklistItemStyled>
-                  <ChecklistItemStyled $ok={false}>
-                    У 12 изображений отсутствует alt-атрибут
-                  </ChecklistItemStyled>
-                  <ChecklistItemStyled $ok>
-                    Корректная иерархия заголовков
-                  </ChecklistItemStyled>
-                  <ChecklistItemStyled $ok={false}>
-                    Невозможно навигировать форму с клавиатуры
-                  </ChecklistItemStyled>
-                  <ChecklistItemStyled $ok>
-                    aria-label у иконочных кнопок
-                  </ChecklistItemStyled>
+                  {report?.accessibility?.items.map((item, i) => (
+                    <ChecklistItemStyled key={i} $ok={item.ok}>
+                      {item.text}
+                    </ChecklistItemStyled>
+                  ))}
                 </ChecklistStyled>
               </ReportBlock>
             </Col6>
@@ -585,25 +565,28 @@ export const ReportView: React.FC<ReportPageProps> = ({
                 description="Качество и ясность текстов."
                 icon={<FileTextIcon size={18} />}
                 loading={loading}
-                meta={<Badge kind="neutral">12 страниц</Badge>}
+                meta={
+                  report?.content?.meta ? (
+                    <Badge kind="neutral">{report.content.meta}</Badge>
+                  ) : undefined
+                }
               >
                 <KVStyled as="dl">
-                  <dt>Средняя длина страницы</dt>
-                  <dd>820 слов</dd>
-                  <dt>Сложность текста</dt>
-                  <dd>Средняя</dd>
-                  <dt>Tone of voice</dt>
-                  <dd>Технический · нейтральный</dd>
-                  <dt>Дубликаты H1</dt>
-                  <dd>2 страницы</dd>
+                  {report?.content?.kvs.map((kv, i) => (
+                    <React.Fragment key={i}>
+                      <dt>{kv.key}</dt>
+                      <dd>{kv.value}</dd>
+                    </React.Fragment>
+                  ))}
                 </KVStyled>
-                <AIPanel
-                  title="Не хватает социальных доказательств"
-                  label="AI рекомендация"
-                >
-                  На главной и /pricing отсутствуют отзывы клиентов и логотипы
-                  партнёров. Это снижает доверие на ключевых шагах воронки.
-                </AIPanel>
+                {report?.content?.aiPanel && (
+                  <AIPanel
+                    title={report.content.aiPanel.title}
+                    label={report.content.aiPanel.label}
+                  >
+                    {report.content.aiPanel.content}
+                  </AIPanel>
+                )}
               </ReportBlock>
             </Col6>
 
@@ -614,21 +597,18 @@ export const ReportView: React.FC<ReportPageProps> = ({
                 description="Адаптивность и удобство на смартфонах."
                 icon={<MobileIcon size={18} />}
                 loading={loading}
-                meta={<Badge kind="warning">3 проблемы</Badge>}
+                meta={
+                  report?.mobile?.meta ? (
+                    <Badge kind="warning">{report.mobile.meta}</Badge>
+                  ) : undefined
+                }
               >
                 <ChecklistStyled>
-                  <ChecklistItemStyled $ok>
-                    Корректный viewport meta
-                  </ChecklistItemStyled>
-                  <ChecklistItemStyled $ok={false}>
-                    Кнопки CTA меньше 44×44px в шапке
-                  </ChecklistItemStyled>
-                  <ChecklistItemStyled $ok={false}>
-                    Горизонтальный скролл на /pricing при ширине 360px
-                  </ChecklistItemStyled>
-                  <ChecklistItemStyled $ok>
-                    Шрифт не меньше 14px в основном контенте
-                  </ChecklistItemStyled>
+                  {report?.mobile?.items.map((item, i) => (
+                    <ChecklistItemStyled key={i} $ok={item.ok}>
+                      {item.text}
+                    </ChecklistItemStyled>
+                  ))}
                 </ChecklistStyled>
               </ReportBlock>
             </Col6>
@@ -641,19 +621,19 @@ export const ReportView: React.FC<ReportPageProps> = ({
                 icon={<ShieldIcon size={18} />}
                 accent="success"
                 loading={loading}
-                meta={<Badge kind="success">В норме</Badge>}
+                meta={
+                  report?.security?.meta ? (
+                    <Badge kind="success">{report.security.meta}</Badge>
+                  ) : undefined
+                }
               >
                 <KVStyled as="dl">
-                  <dt>HTTPS</dt>
-                  <dd>TLS 1.3 · валидный сертификат</dd>
-                  <dt>HSTS</dt>
-                  <dd>включён</dd>
-                  <dt>Content-Security-Policy</dt>
-                  <dd>не настроен</dd>
-                  <dt>X-Frame-Options</dt>
-                  <dd>SAMEORIGIN</dd>
-                  <dt>Cookies</dt>
-                  <dd>Secure · HttpOnly</dd>
+                  {report?.security?.kvs.map((kv, i) => (
+                    <React.Fragment key={i}>
+                      <dt>{kv.key}</dt>
+                      <dd>{kv.value}</dd>
+                    </React.Fragment>
+                  ))}
                 </KVStyled>
               </ReportBlock>
             </Col6>
@@ -666,37 +646,15 @@ export const ReportView: React.FC<ReportPageProps> = ({
                 icon={<TaskIcon size={18} />}
                 loading={loading}
                 loadingSkeleton={<TasksSkeleton />}
-                meta={
-                  <Button variant="outline" size="sm">
-                    Экспортировать в Jira
-                  </Button>
-                }
+                // meta={
+                //   <Button variant="outline" size="sm">
+                //     Экспортировать в Jira
+                //   </Button>
+                // }
               >
-                <TaskItem
-                  title="Добавить кнопку «Запросить демо» на /pricing"
-                  priority="high"
-                  status="todo"
-                />
-                <TaskItem
-                  title="Сократить форму заявки до 3 полей и описать SLA"
-                  priority="high"
-                  status="in_progress"
-                />
-                <TaskItem
-                  title="Сжать hero-изображения до &lt; 300 КБ"
-                  priority="high"
-                  status="todo"
-                />
-                <TaskItem
-                  title="Поднять контраст текста до 4.5:1 на CTA-кнопках"
-                  priority="medium"
-                  status="todo"
-                />
-                <TaskItem
-                  title="Добавить alt-атрибуты ко всем декоративным иконкам"
-                  priority="low"
-                  status="done"
-                />
+                {report?.tasks?.map((task, i) => (
+                  <TaskItem key={i} {...task} />
+                ))}
               </ReportBlock>
             </Col12>
           </GridStyled>
