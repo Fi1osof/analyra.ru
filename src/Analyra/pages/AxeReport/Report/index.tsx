@@ -5,6 +5,7 @@ import {
 } from 'src/gql/generated'
 import { useSnackbar } from 'src/ui-kit/Snackbar'
 import { AxeReportView } from './View'
+import { AxeReportSkeleton } from './Skeleton'
 import { AxeReportStyled } from './styles'
 import { useRouter } from 'next/router'
 import { AnalyzeForm } from 'src/components/pages/MainPage/AnalyzeForm'
@@ -117,7 +118,7 @@ export const AxeReport: React.FC = () => {
     <AxeReportStyled>
       {report && <AxeReportView report={report} />}
 
-      {form}
+      {loading ? <AxeReportSkeleton /> : form}
     </AxeReportStyled>
   )
 }
