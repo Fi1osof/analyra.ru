@@ -309,6 +309,9 @@ const MetricsSkeleton = () => (
 
 /* ───────── Page ───────── */
 
+/**
+ * @deprecated
+ */
 export const ReportView: React.FC<ReportPageProps> = ({
   loading,
   targetUrl,

@@ -1,0 +1,29 @@
+mutation analyzeWebPageAccesibility($input: AnalyzeWebPageAccesibilityInput!) {
+  analyzeWebPageAccesibility(input: $input) {
+    ...AnalyzeWebPageAccessibility_
+  }
+}
+
+fragment AnalyzeWebPageAccessibility_ on AnalyzeWebPageAccessibility {
+  inapplicable
+  incomplete
+  passes
+  violations
+
+  screenshot
+
+  issues {
+    selector
+    ruleId
+    failureSummary
+    help
+    html
+    impact
+    BBox {
+      x
+      y
+      width
+      height
+    }
+  }
+}

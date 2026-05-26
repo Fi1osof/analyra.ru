@@ -1,4 +1,5 @@
-import { useCallback, useState } from 'react'
+/* eslint-disable @typescript-eslint/no-deprecated */
+import { useCallback, useRef, useState } from 'react'
 
 import { SeoHeaders } from 'src/components/seo/SeoHeaders'
 import { JsonLd } from 'src/components/seo/JsonLd'
@@ -15,7 +16,6 @@ import {
   Container,
   FeatureCard,
   GraphIcon,
-  Heading1,
   Heading2,
   Heading3,
   IssueCard,
@@ -27,7 +27,6 @@ import {
   RouteIcon,
   Section,
   Small,
-  SparkleIcon,
   StepList,
   TaskIcon,
   TaskItem,
@@ -47,30 +46,14 @@ import {
   FinalCtaStyled,
   FooterInnerStyled,
   FooterStyled,
-  HeroEyebrowStyled,
-  HeroFootStyled,
-  HeroGridStyled,
-  HeroLeftStyled,
-  HeroMockupStyled,
-  HeroSectionStyled,
-  HeroSubStyled,
-  MockBodyStyled,
-  MockDotStyled,
-  MockHeaderStyled,
-  MockTitleStyled,
   PageStyled,
   SectionHeadStyled,
 } from './styles'
+import { useRouter } from 'next/router'
+import { useSnackbar } from 'src/ui-kit/Snackbar'
+import { AnalyzeForm } from './AnalyzeForm'
 
 /* ────────────────────────────────── Data ────────────────────────────────── */
-
-const heroDiagram = `flowchart TD
-  H([Главная]) --> P[Продукт]
-  H --> PR[Цены]
-  P --> SIGN[Регистрация]
-  PR --> SIGN
-  SIGN --> ON[Онбординг]
-  ON --> ACT[Целевое действие]`
 
 const exampleDiagram = `flowchart LR
   H([Главная]) --> F[Каталог функций]
@@ -161,12 +144,33 @@ export const MainPage: Page = () => {
   const siteTitle = 'Analyra — AI-анализ сайтов и пользовательских сценариев'
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || ''
 
+  const { addMessage } = useSnackbar() || {}
+
   const [url, setUrl] = useState('')
 
+  const onChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setUrl(e.target.value),
+    [],
+  )
+
+  const urlRef = useRef(url)
+  urlRef.current = url
+
+  const router = useRouter()
+
   const submit = useCallback(() => {
-    // const value = url.trim() || "https://example.com";
-    // navigate({ to: "/report", search: { url: value, loading: true } });
-  }, [])
+    const value = urlRef.current.trim()
+
+    if (!value) {
+      addMessage?.('Укажите адрес сайта', {
+        variant: 'error',
+      })
+
+      return
+    }
+
+    router.push(`/analyra/reports/create?url=${value}`)
+  }, [router, addMessage])
 
   return (
     <>
@@ -186,79 +190,13 @@ export const MainPage: Page = () => {
       <PageStyled>
         <Navbar />
 
-        {/* Hero */}
-        <HeroSectionStyled>
-          <Container>
-            <HeroGridStyled>
-              <HeroLeftStyled>
-                <HeroEyebrowStyled>
-                  <Badge kind="ai">AI-агент для продуктовых команд</Badge>
-                </HeroEyebrowStyled>
-                <Heading1>
-                  AI, который понимает ваш сайт
-                  <br />
-                  как живой продукт
-                </Heading1>
-                <HeroSubStyled>
-                  Analyra проходит ключевые пользовательские сценарии, находит
-                  UX-проблемы и точки роста, и превращает их в конкретные задачи
-                  для команды.
-                </HeroSubStyled>
-                <UrlInput
-                  ctaLabel="Проанализировать"
-                  value={url}
-                  onChange={useCallback(
-                    (e: React.ChangeEvent<HTMLInputElement>) =>
-                      setUrl(e.target.value),
-                    [],
-                  )}
-                  onCta={submit}
-                  onKeyDown={useCallback(
-                    (e: React.KeyboardEvent) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault()
-
-                        submit()
-                      }
-                    },
-                    [submit],
-                  )}
-                />
-                <HeroFootStyled>
-                  <SparkleIcon size={14} /> Без регистрации. Первый отчёт за
-                  пару минут.
-                </HeroFootStyled>
-              </HeroLeftStyled>
-
-              <HeroMockupStyled>
-                <MockHeaderStyled>
-                  <MockDotStyled />
-                  <MockDotStyled />
-                  <MockDotStyled />
-                  <MockTitleStyled>analyra · live analysis</MockTitleStyled>
-                </MockHeaderStyled>
-                <MockBodyStyled>
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <Label tone="muted">Карта сценариев</Label>
-                    <Badge kind="success">8 узлов</Badge>
-                  </div>
-                  <MermaidDiagram source={heroDiagram} />
-                  <AIPanel title="Слабый переход к целевому действию">
-                    Между онбордингом и целевым действием теряется ~38%
-                    пользователей. Рассмотрите упрощение шага «Подтверждение
-                    профиля».
-                  </AIPanel>
-                </MockBodyStyled>
-              </HeroMockupStyled>
-            </HeroGridStyled>
-          </Container>
-        </HeroSectionStyled>
+        <AnalyzeForm
+          url={url}
+          onChange={onChange}
+          submit={submit}
+          disabled={false}
+          loading={false}
+        />
 
         {/* Features */}
         <Section tone="soft" id="features">
@@ -419,6 +357,8 @@ export const MainPage: Page = () => {
                     },
                     [submit],
                   )}
+                  disabled={false}
+                  loading={false}
                 />
               </FinalCtaInnerStyled>
               <Small tone="muted">

@@ -1,19 +1,20 @@
-import styled, { css } from "styled-components";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import styled, { css } from 'styled-components'
 
-const toneStyles = css<{ $tone?: "default" | "muted" | "soft" | "accent" }>`
+const toneStyles = css<{ $tone?: 'default' | 'muted' | 'soft' | 'accent' }>`
   color: ${({ theme, $tone }) =>
-    $tone === "muted"
+    $tone === 'muted'
       ? theme.color.muted
-      : $tone === "soft"
+      : $tone === 'soft'
         ? theme.color.textSoft
-        : $tone === "accent"
+        : $tone === 'accent'
           ? theme.color.accent
           : theme.color.text};
-`;
+`
 
-const alignStyles = css<{ $align?: "left" | "center" | "right" }>`
-  text-align: ${({ $align }) => $align ?? "left"};
-`;
+const alignStyles = css<{ $align?: 'left' | 'center' | 'right' }>`
+  text-align: ${({ $align }) => $align ?? 'left'};
+`
 
 export const Heading1Styled = styled.h1<{ $tone?: any; $align?: any }>`
   margin: 0;
@@ -23,7 +24,7 @@ export const Heading1Styled = styled.h1<{ $tone?: any; $align?: any }>`
   letter-spacing: -0.025em;
   ${toneStyles}
   ${alignStyles}
-`;
+`
 
 export const Heading2Styled = styled.h2<{ $tone?: any; $align?: any }>`
   margin: 0;
@@ -33,7 +34,7 @@ export const Heading2Styled = styled.h2<{ $tone?: any; $align?: any }>`
   letter-spacing: -0.022em;
   ${toneStyles}
   ${alignStyles}
-`;
+`
 
 export const Heading3Styled = styled.h3<{ $tone?: any; $align?: any }>`
   margin: 0;
@@ -43,7 +44,7 @@ export const Heading3Styled = styled.h3<{ $tone?: any; $align?: any }>`
   letter-spacing: -0.018em;
   ${toneStyles}
   ${alignStyles}
-`;
+`
 
 export const Heading4Styled = styled.h4<{ $tone?: any; $align?: any }>`
   margin: 0;
@@ -53,7 +54,7 @@ export const Heading4Styled = styled.h4<{ $tone?: any; $align?: any }>`
   letter-spacing: -0.012em;
   ${toneStyles}
   ${alignStyles}
-`;
+`
 
 export const TextStyled = styled.p<{ $tone?: any; $align?: any }>`
   margin: 0;
@@ -61,14 +62,14 @@ export const TextStyled = styled.p<{ $tone?: any; $align?: any }>`
   line-height: ${({ theme }) => theme.lineHeight.relaxed};
   ${toneStyles}
   ${alignStyles}
-`;
+`
 
 export const SmallStyled = styled.span<{ $tone?: any; $align?: any }>`
   font-size: ${({ theme }) => theme.fontSize.small};
   line-height: ${({ theme }) => theme.lineHeight.normal};
   ${toneStyles}
   ${alignStyles}
-`;
+`
 
 export const LabelStyled = styled.span<{ $tone?: any; $align?: any }>`
   font-size: ${({ theme }) => theme.fontSize.label};
@@ -78,7 +79,7 @@ export const LabelStyled = styled.span<{ $tone?: any; $align?: any }>`
   letter-spacing: 0.08em;
   ${toneStyles}
   ${alignStyles}
-`;
+`
 
 export const CodeStyled = styled.code<{ $tone?: any; $align?: any }>`
   font-family: ${({ theme }) => theme.font.mono};
@@ -87,4 +88,4 @@ export const CodeStyled = styled.code<{ $tone?: any; $align?: any }>`
   border-radius: ${({ theme }) => theme.radius.sm};
   background: ${({ theme }) => theme.color.surface2};
   color: ${({ theme }) => theme.color.textSoft};
-`;
+`

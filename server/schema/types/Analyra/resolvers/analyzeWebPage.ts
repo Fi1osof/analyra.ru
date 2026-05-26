@@ -1,58 +1,18 @@
 import { builder } from '../../../builder'
 import { PrismaContext } from 'server/context/interfaces'
 import { chromium } from 'playwright'
-import AxeBuilder from '@axe-core/playwright'
-import * as fs from 'fs'
 import * as path from 'path'
 
-const DeviceTypeEnum = builder.enumType('DeviceType', {
-  values: ['desktop', 'tablet', 'mobile'] as const,
-})
-
-const AnalyzeWebPageInputType = builder.inputType('AnalyzeWebPageInput', {
-  fields: (t) => ({
-    url: t.string({ required: true }),
-    device: t.field({ type: DeviceTypeEnum, required: false }),
-    waitForSelector: t.string({ required: false }),
-    timeout: t.int({ required: false }),
-    userAgent: t.string({ required: false }),
-    acceptLanguage: t.string({ required: false }),
-    runAccessibilityCheck: t.boolean({ required: false }),
-  }),
-})
-
-const STORAGE_BASE_PATH =
-  '/disks/wd-1000/www/analyra.ru/agent/storage/web-analyze'
-
-const DEVICE_VIEWPORTS = {
-  desktop: { width: 1920, height: 1080 },
-  tablet: { width: 768, height: 1024 },
-  mobile: { width: 375, height: 812 },
-}
-
-const DEVICE_USER_AGENTS = {
-  desktop:
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-  tablet:
-    'Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
-  mobile:
-    'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
-}
-
-function extractDomain(url: string): string {
-  try {
-    const parsed = new URL(url)
-    return parsed.hostname.replace(/^www\./, '')
-  } catch {
-    return 'unknown'
-  }
-}
-
-function ensureDirectoryExists(dirPath: string): void {
-  if (!fs.existsSync(dirPath)) {
-    fs.mkdirSync(dirPath, { recursive: true })
-  }
-}
+import { extractDomain } from '../helpers/extractDomain'
+import { ensureDirectoryExists } from '../helpers/ensureDirectoryExists'
+import { validateUrl } from '../helpers/validateUrl'
+import { GraphQLResolveInfo } from 'graphql'
+import { DeviceTypeEnum } from '../types'
+import {
+  DEVICE_USER_AGENTS,
+  DEVICE_VIEWPORTS,
+  STORAGE_BASE_PATH,
+} from '../interfaces'
 
 interface AnalysisError {
   task: string
@@ -109,11 +69,6 @@ interface PageAnalysisResult {
     height: number | null
   }>
   structuredData: unknown[]
-  accessibility: {
-    violations: unknown[]
-    passes: unknown[]
-    incomplete: unknown[]
-  } | null
   screenshots: {
     viewport: string | null
     fullPage: string | null
@@ -121,40 +76,100 @@ interface PageAnalysisResult {
   errors: AnalysisError[]
 }
 
-function validateUrl(url: string): { valid: boolean; error?: string } {
-  if (!url) {
-    return { valid: false, error: 'URL is required' }
-  }
+// const AnalyzeWebPageAccessibility = builder.simpleObject(
+//   'AnalyzeWebPageAccessibility',
+//   {
+//     fields: (t) => ({
+//       violations: t.field({
+//         type: ['Json'],
+//       }),
+//       passes: t.field({
+//         type: ['Json'],
+//       }),
+//       incomplete: t.field({
+//         type: ['Json'],
+//       }),
+//       inapplicable: t.field({
+//         type: ['Json'],
+//       }),
+//     }),
+//   },
+// )
 
-  if (!url.startsWith('http://') && !url.startsWith('https://')) {
-    return { valid: false, error: 'URL must start with http:// or https://' }
-  }
+const AnalyzeWebPageResult = builder
+  .objectRef<PageAnalysisResult>('AnalyzeWebPageResult')
+  .implement({
+    fields: (t) => ({
+      url: t.exposeString('url'),
+      finalUrl: t.exposeString('finalUrl'),
+      statusCode: t.exposeInt('statusCode'),
+      device: t.exposeString('device'),
+      timestamp: t.exposeString('timestamp'),
+      loadTime: t.exposeFloat('loadTime'),
+      favicon: t.exposeString('favicon', { nullable: true }),
+      // Для вложенных объектов и массивов нужны отдельные типы или Json
+      httpHeaders: t.field({
+        type: 'Json',
+        resolve: (parent) => parent.httpHeaders,
+      }),
+      performance: t.field({
+        type: 'Json',
+        nullable: true,
+        resolve: (parent) => parent.performance,
+      }),
+      meta: t.field({ type: 'Json', resolve: (parent) => parent.meta }),
+      openGraph: t.field({
+        type: 'Json',
+        resolve: (parent) => parent.openGraph,
+      }),
+      twitterCards: t.field({
+        type: 'Json',
+        resolve: (parent) => parent.twitterCards,
+      }),
+      links: t.field({ type: 'Json', resolve: (parent) => parent.links }),
+      images: t.field({ type: 'Json', resolve: (parent) => parent.images }),
+      structuredData: t.field({
+        type: 'Json',
+        resolve: (parent) => parent.structuredData,
+      }),
 
-  try {
-    const parsed = new URL(url)
-    if (!parsed.hostname || parsed.hostname.length === 0) {
-      return { valid: false, error: 'URL must contain a valid hostname' }
-    }
-    return { valid: true }
-  } catch {
-    return { valid: false, error: 'Invalid URL format' }
-  }
-}
+      screenshots: t.field({
+        type: 'Json',
+        resolve: (parent) => parent.screenshots,
+      }),
+      errors: t.field({ type: 'Json', resolve: (parent) => parent.errors }),
+    }),
+  })
+
+const AnalyzeWebPageInputType = builder.inputType('AnalyzeWebPageInput', {
+  fields: (t) => ({
+    url: t.string({ required: true }),
+    device: t.field({ type: DeviceTypeEnum, required: false }),
+    waitForSelector: t.string({ required: false }),
+    timeout: t.int({ required: false }),
+    userAgent: t.string({ required: false }),
+    acceptLanguage: t.string({ required: false }),
+  }),
+})
+
+builder.mutationField('analyzeWebPage', (t) =>
+  t.field({
+    type: AnalyzeWebPageResult,
+    nullable: false,
+    args: {
+      input: t.arg({ type: AnalyzeWebPageInputType, required: true }),
+    },
+    resolve: analyzeWebPageResolver,
+  }),
+)
 
 async function analyzeWebPageResolver(
   _root: unknown,
   args: {
-    input: {
-      url: string
-      device?: 'desktop' | 'tablet' | 'mobile' | null
-      waitForSelector?: string | null
-      timeout?: number | null
-      userAgent?: string | null
-      acceptLanguage?: string | null
-      runAccessibilityCheck?: boolean | null
-    }
+    input: typeof AnalyzeWebPageInputType.$inferInput
   },
   _ctx: PrismaContext,
+  _info: GraphQLResolveInfo,
 ): Promise<PageAnalysisResult> {
   const {
     url,
@@ -163,7 +178,6 @@ async function analyzeWebPageResolver(
     timeout = 30000,
     userAgent,
     acceptLanguage,
-    runAccessibilityCheck = false,
   } = args.input
 
   const urlValidation = validateUrl(url)
@@ -181,6 +195,8 @@ async function analyzeWebPageResolver(
   ensureDirectoryExists(screenshotDir)
 
   const browser = await chromium.launch({ headless: true })
+
+  let result
 
   try {
     const context = await browser.newContext({
@@ -572,35 +588,9 @@ async function analyzeWebPageResolver(
       })
     }
 
-    // Run accessibility check (axe-core)
-    let accessibility: {
-      violations: unknown[]
-      passes: unknown[]
-      incomplete: unknown[]
-      inapplicable: unknown[]
-    } | null = null
-    if (runAccessibilityCheck) {
-      try {
-        const axeResults = await new AxeBuilder({ page }).analyze()
-        accessibility = {
-          violations: axeResults.violations,
-          passes: axeResults.passes,
-          incomplete: axeResults.incomplete,
-          inapplicable: axeResults.inapplicable,
-        }
-      } catch (e) {
-        errors.push({
-          task: 'accessibilityCheck',
-          error: e instanceof Error ? e.message : String(e),
-        })
-      }
-    }
-
     const loadTime = Date.now() - startTime
 
-    await browser.close()
-
-    return {
+    result = {
       url,
       finalUrl,
       statusCode,
@@ -628,22 +618,11 @@ async function analyzeWebPageResolver(
       favicon,
       httpHeaders,
       performance,
-      accessibility,
       errors,
     }
-  } catch (e) {
+  } finally {
     await browser.close()
-    throw e
   }
-}
 
-builder.mutationField('analyzeWebPage', (t) =>
-  t.field({
-    type: 'Json',
-    nullable: false,
-    args: {
-      input: t.arg({ type: AnalyzeWebPageInputType, required: true }),
-    },
-    resolve: analyzeWebPageResolver,
-  }),
-)
+  return result
+}

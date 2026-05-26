@@ -3,6 +3,7 @@ import { ReportView as Component } from './'
 
 const meta = {
   title: 'Pages/Report',
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   component: Component,
   argTypes: {
     // variant: {
@@ -18,6 +19,7 @@ const meta = {
     // },
   },
   args: {},
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
 } satisfies Meta<typeof Component>
 
 export default meta
@@ -57,25 +59,30 @@ export const Default: Story = {
       ],
       aiInsight: {
         title: 'Длинный путь до целевого действия',
-        content: 'Пользователю нужно 4–5 переходов, прежде чем он попадает к форме заявки. Это главная причина низкой конверсии на текущем сайте.',
-        recommendation: 'Сократите путь до 2 шагов: добавьте CTA на тарифах и в карточках кейсов.',
+        content:
+          'Пользователю нужно 4–5 переходов, прежде чем он попадает к форме заявки. Это главная причина низкой конверсии на текущем сайте.',
+        recommendation:
+          'Сократите путь до 2 шагов: добавьте CTA на тарифах и в карточках кейсов.',
       },
       uxIssues: [
         {
           title: 'Слишком длинный путь до заявки',
-          description: 'От главной до формы — 4 шага. Конкуренты делают это за 2.',
+          description:
+            'От главной до формы — 4 шага. Конкуренты делают это за 2.',
           severity: 'high',
           location: '/ → /pricing → /demo',
         },
         {
           title: 'Скрытая ценность тарифов',
-          description: 'Цены показываются только после клика по «Подробнее» — добавьте плашки на главной.',
+          description:
+            'Цены показываются только после клика по «Подробнее» — добавьте плашки на главной.',
           severity: 'medium',
           location: '/pricing',
         },
         {
           title: 'Нет объяснения формы',
-          description: 'Форма не объясняет, что произойдёт после отправки и за какой срок ответят.',
+          description:
+            'Форма не объясняет, что произойдёт после отправки и за какой срок ответят.',
           severity: 'medium',
           location: '/demo',
         },
@@ -85,7 +92,10 @@ export const Default: Story = {
           { text: 'Title и meta description заполнены', ok: true },
           { text: 'Корректный H1 на всех страницах', ok: true },
           { text: 'Отсутствует Open Graph на /pricing и /blog/*', ok: false },
-          { text: 'Нет sitemap.xml — добавьте для лучшей индексации', ok: false },
+          {
+            text: 'Нет sitemap.xml — добавьте для лучшей индексации',
+            ok: false,
+          },
           { text: 'robots.txt настроен корректно', ok: true },
         ],
         meta: 'Score 84',
@@ -119,7 +129,8 @@ export const Default: Story = {
         aiPanel: {
           title: 'Не хватает социальных доказательств',
           label: 'AI рекомендация',
-          content: 'На главной и /pricing отсутствуют отзывы клиентов и логотипы партнёров. Это снижает доверие на ключевых шагах воронки.',
+          content:
+            'На главной и /pricing отсутствуют отзывы клиентов и логотипы партнёров. Это снижает доверие на ключевых шагах воронки.',
         },
         meta: '12 страниц',
       },
@@ -127,7 +138,10 @@ export const Default: Story = {
         items: [
           { text: 'Корректный viewport meta', ok: true },
           { text: 'Кнопки CTA меньше 44×44px в шапке', ok: false },
-          { text: 'Горизонтальный скролл на /pricing при ширине 360px', ok: false },
+          {
+            text: 'Горизонтальный скролл на /pricing при ширине 360px',
+            ok: false,
+          },
           { text: 'Шрифт не меньше 14px в основном контенте', ok: true },
         ],
         meta: '3 проблемы',
@@ -143,11 +157,31 @@ export const Default: Story = {
         meta: 'В норме',
       },
       tasks: [
-        { title: 'Добавить кнопку «Запросить демо» на /pricing', priority: 'high', status: 'todo' },
-        { title: 'Сократить форму заявки до 3 полей и описать SLA', priority: 'high', status: 'in_progress' },
-        { title: 'Сжать hero-изображения до < 300 КБ', priority: 'high', status: 'todo' },
-        { title: 'Поднять контраст текста до 4.5:1 на CTA-кнопках', priority: 'medium', status: 'todo' },
-        { title: 'Добавить alt-атрибуты ко всем декоративным иконкам', priority: 'low', status: 'done' },
+        {
+          title: 'Добавить кнопку «Запросить демо» на /pricing',
+          priority: 'high',
+          status: 'todo',
+        },
+        {
+          title: 'Сократить форму заявки до 3 полей и описать SLA',
+          priority: 'high',
+          status: 'in_progress',
+        },
+        {
+          title: 'Сжать hero-изображения до < 300 КБ',
+          priority: 'high',
+          status: 'todo',
+        },
+        {
+          title: 'Поднять контраст текста до 4.5:1 на CTA-кнопках',
+          priority: 'medium',
+          status: 'todo',
+        },
+        {
+          title: 'Добавить alt-атрибуты ко всем декоративным иконкам',
+          priority: 'low',
+          status: 'done',
+        },
       ],
     },
   },
