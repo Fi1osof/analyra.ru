@@ -21,9 +21,7 @@ import {
   IssueCard,
   Label,
   LayoutIcon,
-  Logo,
   MermaidDiagram,
-  Navbar,
   RouteIcon,
   Section,
   Small,
@@ -44,9 +42,6 @@ import {
   FeatureGridStyled,
   FinalCtaInnerStyled,
   FinalCtaStyled,
-  FooterInnerStyled,
-  FooterStyled,
-  PageStyled,
   SectionHeadStyled,
 } from './styles'
 import { useRouter } from 'next/router'
@@ -187,9 +182,7 @@ export const MainPage: Page = () => {
         })}
       />
 
-      <PageStyled>
-        <Navbar />
-
+      <>
         <AnalyzeForm
           url={url}
           onChange={onChange}
@@ -373,16 +366,7 @@ export const MainPage: Page = () => {
             </FinalCtaStyled>
           </Container>
         </Section>
-
-        <FooterStyled>
-          <FooterInnerStyled>
-            <Logo size={20} />
-            <span>
-              © {new Date().getFullYear()} Analyra. Все права защищены.
-            </span>
-          </FooterInnerStyled>
-        </FooterStyled>
-      </PageStyled>
+      </>
     </>
   )
 }
