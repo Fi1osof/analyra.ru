@@ -1,6 +1,5 @@
-/* eslint-disable react/jsx-no-bind */
 /* eslint-disable no-console */
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import {
   LinkIcon,
   CheckIcon,
@@ -8,12 +7,14 @@ import {
   AlertIcon,
   FileTextIcon,
 } from 'src/Analyra/lovable/v1/src/ui-kit/icons'
-import type {
-  CheckUrlRow,
-  CheckUrlsProps,
-  RowValidity,
-  UrlStatus,
-} from './types'
+import {
+  isStatusFilter,
+  type CheckUrlRow,
+  type CheckUrlsProps,
+  type ParsedRow,
+  type StatusFilter,
+} from './interfaces'
+
 import {
   WrapStyled,
   PanelStyled,
@@ -44,358 +45,211 @@ import {
   ProgressBarStyled,
   ProgressFillStyled,
   FileButtonStyled,
-  ModalOverlayStyled,
-  ModalStyled,
-  ModalHeadStyled,
-  ModalCloseStyled,
-  ModalBodyStyled,
-  ModalFooterStyled,
-  TextareaStyled,
   ExportTextareaStyled,
   InlineNoticeStyled,
 } from './styles'
 import { Button, Input, Label } from 'src/Analyra/lovable/v1/src/ui-kit'
-
-type StatusFilter = 'all' | '2xx' | '3xx' | '4xx' | '5xx' | 'na'
-
-const matchesFilter = (s: UrlStatus, f: StatusFilter): boolean => {
-  if (f === 'all') {
-    return true
-  }
-  if (f === 'na') {
-    return s === null
-  }
-  if (s === null) {
-    return false
-  }
-  if (f === '2xx') {
-    return s >= 200 && s < 300
-  }
-  if (f === '3xx') {
-    return s >= 300 && s < 400
-  }
-  if (f === '4xx') {
-    return s >= 400 && s < 500
-  }
-  if (f === '5xx') {
-    return s >= 500 && s < 600
-  }
-  return true
-}
-
-// const SAMPLE_INPUT = `"/catalog/detskie-ploschadki/dik-m-0003.html","404","N/a","18.12.2017"
-// "/catalog/detskie-ploschadki/dik-m-0044.html","404","N/a","11.02.2018"
-// "/catalog/sport-trenazhery/turnik-pro.html","500","N/a","22.07.2024"
-// "/blog/2023/launch","301","N/a","05.03.2024"
-// "/legacy/about-us","404","N/a","18.12.2017"
-// "https://other-site.example/external-page","404","N/a","01.01.2025"`
-
-const statusTone = (
-  s: UrlStatus,
-): 'success' | 'warning' | 'danger' | 'muted' => {
-  if (s === null) {
-    return 'muted'
-  }
-  if (s >= 200 && s < 300) {
-    return 'success'
-  }
-  if (s >= 300 && s < 400) {
-    return 'warning'
-  }
-  return 'danger'
-}
-
-const isReindexable = (s: UrlStatus) =>
-  s === null && ((s && s >= 200 && s < 300) || (s && s >= 300 && s < 400))
-
-const normalizeOrigin = (raw: string): string => {
-  let v = raw.trim()
-  if (!v) {
-    return ''
-  }
-  if (!/^https?:\/\//i.test(v)) {
-    v = `https://${v}`
-  }
-  try {
-    const u = new URL(v)
-    return `${u.protocol}//${u.host}`
-  } catch {
-    return ''
-  }
-}
-
-const resolveUrl = (
-  raw: string,
-  origin: string,
-): { url: string | null; validity: RowValidity } => {
-  const value = raw.trim()
-  if (!value) {
-    return { url: null, validity: 'invalid' }
-  }
-  if (/^https?:\/\//i.test(value)) {
-    try {
-      const u = new URL(value)
-      return { url: u.toString(), validity: 'ok' }
-    } catch {
-      return { url: null, validity: 'invalid' }
-    }
-  }
-  if (!origin) {
-    return { url: null, validity: 'needs-origin' }
-  }
-  try {
-    const u = new URL(value, origin + '/')
-    return { url: u.toString(), validity: 'ok' }
-  } catch {
-    return { url: null, validity: 'invalid' }
-  }
-}
-
-/** Parse a single CSV line — handles quoted values with commas. */
-const parseCsvLine = (line: string): string[] => {
-  const out: string[] = []
-  let cur = ''
-  let inQ = false
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i]
-    if (ch === '"') {
-      if (inQ && line[i + 1] === '"') {
-        cur += '"'
-        i++
-      } else {
-        inQ = !inQ
-      }
-    } else if ((ch === ',' || ch === ';' || ch === '\t') && !inQ) {
-      out.push(cur)
-      cur = ''
-    } else {
-      cur += ch
-    }
-  }
-  out.push(cur)
-  return out.map((s) => s.trim())
-}
-
-interface ParsedRow {
-  raw: string
-  oldStatus: UrlStatus
-  lastCrawl: string | null
-}
-
-/** Parse user input. Supports:
- *  - "/path","404","N/a","18.12.2017"  (Yandex.Webmaster)
- *  - https://site.com/a
- *  - https://site.com/a,404
- *  - /path  (uses base origin)
- */
-const parseInput = (raw: string): ParsedRow[] => {
-  const lines = raw
-    .split(/\r?\n/)
-    .map((l) => l.trim())
-    .filter(Boolean)
-  const rows: ParsedRow[] = []
-  for (const line of lines) {
-    const parts = parseCsvLine(line).filter((p) => p.length > 0)
-    if (parts.length === 0) {
-      continue
-    }
-    const urlPart = parts[0]
-    // skip header rows
-    if (/^url$/i.test(urlPart) || /^адрес/i.test(urlPart)) {
-      continue
-    }
-    const statusPart = parts.slice(1).find((p) => /^\d{3}$/.test(p))
-    const datePart = parts
-      .slice(1)
-      .find((p) => /^\d{1,2}[.\-/]\d{1,2}[.\-/]\d{2,4}$/.test(p))
-    rows.push({
-      raw: urlPart,
-      oldStatus: statusPart ? Number(statusPart) : null,
-      lastCrawl: datePart ?? null,
-    })
-  }
-  // dedupe by raw
-  const seen = new Set<string>()
-  return rows.filter((r) => (seen.has(r.raw) ? false : (seen.add(r.raw), true)))
-}
-
-/** Deterministic pseudo-random based on url for stable demo results. */
-const mockNewStatus = (url: string): UrlStatus => {
-  let h = 0
-  for (let i = 0; i < url.length; i++) {
-    h = (h * 31 + url.charCodeAt(i)) >>> 0
-  }
-  const pick = h % 100
-  if (pick < 55) {
-    return 200
-  }
-  if (pick < 75) {
-    return 301
-  }
-  if (pick < 85) {
-    return 302
-  }
-  if (pick < 95) {
-    return 404
-  }
-  return 500
-}
-
-const nowLabel = () => {
-  const d = new Date()
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`
-}
+import {
+  isReindexable,
+  matchesFilter,
+  // normalizeOrigin,
+  parseInput,
+  resolveUrl,
+  statusTone,
+} from './helpers'
+import { CheckUrlsManualInput } from './ManualInput'
+import { useBoolean } from 'src/hooks/useBoolean'
 
 let ROW_ID = 0
 const nextId = () => `r-${++ROW_ID}`
 
 export const CheckUrls: React.FC<CheckUrlsProps> = ({ className }) => {
-  const [origin, setOrigin] = useState<string>('')
+  const [siteOrigin, setSiteOrigin] = useState<string>('')
   const [rows, setRows] = useState<CheckUrlRow[]>([])
-  const [manualOpen, setManualOpen] = useState(false)
-  const [manualText, setManualText] = useState<string>('')
-  const [exportOpen, setExportOpen] = useState(false)
+
+  // const [manualOpen, setManualOpen] = useState(false)
+  const [manualOpen, manualOpenOn, manualOpenOff] = useBoolean()
+
+  const [exportOpen, , exportOpenOff, exportOpenToggle] = useBoolean(false)
+
   const [copied, setCopied] = useState(false)
-  const fileRef = useRef<HTMLInputElement>(null)
-  const timersRef = useRef<number[]>([])
-  const [filter, setFilter] = useState<StatusFilter>('all')
+  // const fileRef = useRef<HTMLInputElement>(null)
+  // const timersRef = useRef<number[]>([])
+  const [filter, filterSetter] = useState<StatusFilter>('all')
 
-  const normalizedOrigin = useMemo(() => normalizeOrigin(origin), [origin])
+  const onClickSetFilter = useCallback(
+    (event: React.MouseEvent<HTMLButtonElement>) => {
+      const filter = event.currentTarget.value
 
-  // re-resolve URLs whenever origin changes (so previously "needs-origin" rows update)
-  useEffect(() => {
-    setRows((prev) =>
-      prev.map((r) => {
-        const { url, validity } = resolveUrl(r.raw, normalizedOrigin)
-        return { ...r, url, validity }
-      }),
-    )
-  }, [normalizedOrigin])
-
-  useEffect(
-    () => () => {
-      timersRef.current.forEach((t) => window.clearTimeout(t))
+      if (isStatusFilter(filter)) {
+        filterSetter(filter)
+      } else {
+        console.error(`Inknown filter "${filter}"`)
+      }
     },
     [],
   )
 
-  const addRows = (parsed: ParsedRow[]) => {
-    if (parsed.length === 0) {
-      return
-    }
-    setRows((prev) => {
-      const existing = new Set(prev.map((r) => r.raw))
-      const fresh: CheckUrlRow[] = parsed
-        .filter((p) => !existing.has(p.raw))
-        .map((p) => {
-          const { url, validity } = resolveUrl(p.raw, normalizedOrigin)
-          return {
-            id: nextId(),
-            raw: p.raw,
-            url,
-            validity,
-            oldStatus: p.oldStatus,
-            newStatus: null,
-            lastCrawl: p.lastCrawl,
-            checkedAt: null,
-            selected: false,
-            pending: false,
-          }
-        })
-      return [...prev, ...fresh]
-    })
-  }
+  // const normalizedOrigin = useMemo(() => normalizeOrigin(siteOrigin), [siteOrigin])
 
-  const handleManualSubmit = () => {
-    addRows(parseInput(manualText))
-    setManualOpen(false)
-  }
+  // re-resolve URLs whenever siteOrigin changes (so previously "needs-origin" rows update)
+  // useEffect(() => {
+  //   setRows((prev) =>
+  //     prev.map((r) => {
+  //       const { url, validity } = resolveUrl(r.raw, normalizedOrigin)
+  //       return { ...r, url, validity }
+  //     }),
+  //   )
+  // }, [normalizedOrigin])
 
-  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) {
-      return
-    }
-    const text = await file.text()
-    addRows(parseInput(text))
-    e.target.value = ''
-  }
+  // useEffect(
+  //   () => () => {
+  //     timersRef.current.forEach((t) => window.clearTimeout(t))
+  //   },
+  //   [],
+  // )
 
-  const runCheck = (target?: CheckUrlRow[]) => {
-    const toCheck = (target ?? rows).filter((r) => r.validity === 'ok')
-    if (toCheck.length === 0) {
-      return
-    }
-    setExportOpen(false)
-    const ids = new Set(toCheck.map((r) => r.id))
-    setRows((prev) =>
-      prev.map((r) =>
-        ids.has(r.id) ? { ...r, pending: true, newStatus: null } : r,
-      ),
-    )
+  const addRows = useCallback(
+    (parsed: ParsedRow[]) => {
+      if (parsed.length === 0) {
+        return
+      }
+      setRows((prev) => {
+        const existing = new Set(prev.map((r) => r.raw))
+        const fresh: CheckUrlRow[] = parsed
+          .filter((p) => !existing.has(p.raw))
+          .map((p) => {
+            const { url, validity } = resolveUrl(p.raw, siteOrigin)
+            return {
+              id: nextId(),
+              raw: p.raw,
+              url,
+              validity,
+              oldStatus: p.oldStatus,
+              newStatus: null,
+              lastCrawl: p.lastCrawl,
+              checkedAt: null,
+              selected: false,
+              pending: false,
+            }
+          })
+        return [...prev, ...fresh]
+      })
+    },
+    [siteOrigin],
+  )
 
-    timersRef.current.forEach((t) => window.clearTimeout(t))
-    timersRef.current = []
+  const handleFile = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0]
+      if (!file) {
+        return
+      }
+      file.text().then((text) => {
+        console.log('handleFile text', text)
 
-    toCheck.forEach((row, idx) => {
-      const delay = 300 + Math.random() * 1400 + idx * 70
-      const t = window.setTimeout(() => {
-        const newStatus = row.url ? mockNewStatus(row.url) : null
-        const checkedAt = nowLabel()
-        setRows((prev) =>
-          prev.map<CheckUrlRow>((r) =>
-            r.id === row.id
-              ? {
-                  ...r,
-                  newStatus,
-                  checkedAt,
-                  pending: false,
-                  selected: isReindexable(newStatus) || false,
-                }
-              : r,
-          ),
-        )
-      }, delay)
-      timersRef.current.push(t)
-    })
-  }
+        addRows(parseInput(text))
 
-  const toggle = (id: string) =>
+        e.target.value = ''
+      })
+    },
+    [addRows],
+  )
+
+  // const runCheck = useCallback((_target?: CheckUrlRow[]) => {
+  const runCheck = useCallback(() => {
+    // const toCheck = (target ?? rows).filter((r) => r.validity === 'ok')
+    // if (toCheck.length === 0) {
+    //   return
+    // }
+    // setExportOpen(false)
+    // const ids = new Set(toCheck.map((r) => r.id))
+    // setRows((prev) =>
+    //   prev.map((r) =>
+    //     ids.has(r.id) ? { ...r, pending: true, newStatus: null } : r,
+    //   ),
+    // )
+    // timersRef.current.forEach((t) => window.clearTimeout(t))
+    // timersRef.current = []
+    // toCheck.forEach((row, idx) => {
+    //   const delay = 300 + Math.random() * 1400 + idx * 70
+    //   const t = window.setTimeout(() => {
+    //     // TODO Fix
+    //     // const newStatus = row.url ? mockNewStatus(row.url) : null
+    //     const newStatus = null
+    //     // TODO Fix
+    //     // const checkedAt = nowLabel()
+    //     const checkedAt = null
+    //     setRows((prev) =>
+    //       prev.map<CheckUrlRow>((r) =>
+    //         r.id === row.id
+    //           ? {
+    //               ...r,
+    //               newStatus,
+    //               checkedAt,
+    //               pending: false,
+    //               selected: isReindexable(newStatus) || false,
+    //             }
+    //           : r,
+    //       ),
+    //     )
+    //   }, delay)
+    //   // timersRef.current.push(t)
+    // })
+  }, [])
+
+  const onChangeToggle = useCallback<
+    React.ChangeEventHandler<HTMLInputElement>
+  >((event) => {
+    const id = event.currentTarget.value
+
     setRows((prev) =>
       prev.map((r) => (r.id === id ? { ...r, selected: !r.selected } : r)),
     )
+  }, [])
 
-  const toggleAll = (next: boolean) =>
-    setRows((prev) =>
-      prev.map<CheckUrlRow>((r) => ({
-        ...r,
-        selected: next && isReindexable(r.newStatus) ? true : false,
-      })),
-    )
+  const toggleAll = useCallback(
+    (next: boolean) =>
+      setRows((prev) =>
+        prev.map<CheckUrlRow>((r) => ({
+          ...r,
+          selected: next && isReindexable(r.newStatus) ? true : false,
+        })),
+      ),
+    [],
+  )
 
-  const removeRow = (id: string) =>
-    setRows((prev) => prev.filter((r) => r.id !== id))
+  const removeRow = useCallback(
+    (event: React.MouseEvent<HTMLButtonElement>) => {
+      const id = event.currentTarget.value
 
-  const clearAll = () => {
-    timersRef.current.forEach((t) => window.clearTimeout(t))
-    timersRef.current = []
+      setRows((prev) => prev.filter((r) => r.id !== id))
+    },
+    [],
+  )
+
+  const clearAll = useCallback(() => {
+    // timersRef.current.forEach((t) => window.clearTimeout(t))
+    // timersRef.current = []
     setRows([])
-    setExportOpen(false)
-  }
+    exportOpenOff()
+  }, [exportOpenOff])
 
-  const stopCheck = () => {
-    timersRef.current.forEach((t) => window.clearTimeout(t))
-    timersRef.current = []
+  const stopCheck = useCallback(() => {
+    // timersRef.current.forEach((t) => window.clearTimeout(t))
+    // timersRef.current = []
     setRows((prev) =>
       prev.map((r) => (r.pending ? { ...r, pending: false } : r)),
     )
-  }
+  }, [])
 
-  const recheckSelected = () => {
-    const sel = rows.filter((r) => r.selected && r.validity === 'ok')
-    runCheck(sel.length > 0 ? sel : undefined)
-  }
+  // TODO Restore
+  const recheckSelected = useCallback(() => {
+    console.error('recheckSelected not implemented')
+
+    // const sel = rows.filter((r) => r.selected && r.validity === 'ok')
+    // runCheck(sel.length > 0 ? sel : undefined)
+  }, [])
 
   const filterCounts = useMemo(() => {
     const c = {
@@ -477,48 +331,55 @@ export const CheckUrls: React.FC<CheckUrlsProps> = ({ className }) => {
     [rows],
   )
 
-  const copy = async () => {
+  const copy = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(exportText)
       setCopied(true)
       window.setTimeout(() => setCopied(false), 1600)
-    } catch {
-      /* noop */
+    } catch (error) {
+      console.error(error)
     }
-  }
+  }, [exportText])
 
-  const allReindexableSelected =
-    rows.length > 0 &&
-    rows.filter((r) => isReindexable(r.newStatus)).length > 0 &&
-    rows.filter((r) => isReindexable(r.newStatus)).every((r) => r.selected)
+  const allReindexableSelected = useMemo(() => {
+    return (
+      rows.length > 0 &&
+      rows.filter((r) => isReindexable(r.newStatus)).length > 0 &&
+      rows.filter((r) => isReindexable(r.newStatus)).every((r) => r.selected)
+    )
+  }, [rows])
 
   return (
     <WrapStyled className={className}>
       <PanelStyled>
         <SettingsRowStyled>
           <FieldStyled>
-            <FieldLabelStyled htmlFor="origin">
+            <FieldLabelStyled htmlFor="siteOrigin">
               <LinkIcon size={14} /> URL сайта
               <FieldHintStyled>
                 используется для коротких путей из выгрузки
               </FieldHintStyled>
             </FieldLabelStyled>
             <Input
-              id="origin"
-              value={origin}
-              onChange={(e) => setOrigin(e.target.value)}
+              id="siteOrigin"
+              value={siteOrigin}
+              onChange={useCallback(
+                (e: React.ChangeEvent<HTMLInputElement>) =>
+                  setSiteOrigin(e.target.value),
+                [],
+              )}
               placeholder="https://example.com"
               iconLeft={<LinkIcon size={14} />}
             />
           </FieldStyled>
-          <ActionsRowStyled>
+          {/* <ActionsRowStyled>
             <FileButtonStyled>
               <FileTextIcon size={14} />
               Загрузить из файла
               <input
                 ref={fileRef}
                 type="file"
-                accept=".csv,.tsv,.txt,.xls,.xlsx"
+                accept=".csv"
                 onChange={handleFile}
               />
             </FileButtonStyled>
@@ -529,7 +390,7 @@ export const CheckUrls: React.FC<CheckUrlsProps> = ({ className }) => {
             >
               Ввести вручную
             </Button>
-          </ActionsRowStyled>
+          </ActionsRowStyled> */}
         </SettingsRowStyled>
 
         {rows.length > 0 && (
@@ -582,7 +443,7 @@ export const CheckUrls: React.FC<CheckUrlsProps> = ({ className }) => {
                   <Button
                     variant="primary"
                     size="sm"
-                    onClick={() => runCheck()}
+                    onClick={runCheck}
                     disabled={stats.checkable === 0}
                   >
                     <SparkleIcon size={14} /> Проверить{' '}
@@ -597,7 +458,9 @@ export const CheckUrls: React.FC<CheckUrlsProps> = ({ className }) => {
                 type="button"
                 $active={filter === 'all'}
                 $tone="neutral"
-                onClick={() => setFilter('all')}
+                value="all"
+                // onClick={() => onClickSetFilter('all')}
+                onClick={onClickSetFilter}
               >
                 Все <small>{filterCounts.all}</small>
               </FilterChipStyled>
@@ -606,7 +469,9 @@ export const CheckUrls: React.FC<CheckUrlsProps> = ({ className }) => {
                 $active={filter === '2xx'}
                 $tone="success"
                 disabled={filterCounts['2xx'] === 0}
-                onClick={() => setFilter('2xx')}
+                value="2xx"
+                // onClick={() => onClickSetFilter('2xx')}
+                onClick={onClickSetFilter}
               >
                 2xx <small>{filterCounts['2xx']}</small>
               </FilterChipStyled>
@@ -615,7 +480,9 @@ export const CheckUrls: React.FC<CheckUrlsProps> = ({ className }) => {
                 $active={filter === '3xx'}
                 $tone="warning"
                 disabled={filterCounts['3xx'] === 0}
-                onClick={() => setFilter('3xx')}
+                value="3xx"
+                // onClick={() => onClickSetFilter('3xx')}
+                onClick={onClickSetFilter}
               >
                 3xx <small>{filterCounts['3xx']}</small>
               </FilterChipStyled>
@@ -624,7 +491,9 @@ export const CheckUrls: React.FC<CheckUrlsProps> = ({ className }) => {
                 $active={filter === '4xx'}
                 $tone="danger"
                 disabled={filterCounts['4xx'] === 0}
-                onClick={() => setFilter('4xx')}
+                value="4xx"
+                // onClick={() => onClickSetFilter('4xx')}
+                onClick={onClickSetFilter}
               >
                 4xx <small>{filterCounts['4xx']}</small>
               </FilterChipStyled>
@@ -633,7 +502,9 @@ export const CheckUrls: React.FC<CheckUrlsProps> = ({ className }) => {
                 $active={filter === '5xx'}
                 $tone="danger"
                 disabled={filterCounts['5xx'] === 0}
-                onClick={() => setFilter('5xx')}
+                value="5xx"
+                // onClick={() => onClickSetFilter('5xx')}
+                onClick={onClickSetFilter}
               >
                 5xx <small>{filterCounts['5xx']}</small>
               </FilterChipStyled>
@@ -642,7 +513,9 @@ export const CheckUrls: React.FC<CheckUrlsProps> = ({ className }) => {
                 $active={filter === 'na'}
                 $tone="muted"
                 disabled={filterCounts.na === 0}
-                onClick={() => setFilter('na')}
+                value="na"
+                // onClick={() => onClickSetFilter('na')}
+                onClick={onClickSetFilter}
               >
                 N/a <small>{filterCounts.na}</small>
               </FilterChipStyled>
@@ -669,17 +542,9 @@ export const CheckUrls: React.FC<CheckUrlsProps> = ({ className }) => {
               <FileButtonStyled>
                 <FileTextIcon size={14} />
                 Загрузить из файла
-                <input
-                  type="file"
-                  accept=".csv,.tsv,.txt,.xls,.xlsx"
-                  onChange={handleFile}
-                />
+                <input type="file" accept=".csv" onChange={handleFile} />
               </FileButtonStyled>
-              <Button
-                variant="primary"
-                size="md"
-                onClick={() => setManualOpen(true)}
-              >
+              <Button variant="primary" size="md" onClick={manualOpenOn}>
                 Ввести вручную
               </Button>
             </ActionsRowStyled>
@@ -692,6 +557,7 @@ export const CheckUrls: React.FC<CheckUrlsProps> = ({ className }) => {
                   <th className="center">
                     <CheckboxStyled
                       checked={allReindexableSelected}
+                      // eslint-disable-next-line react/jsx-no-bind
                       onChange={(e) => toggleAll(e.target.checked)}
                       aria-label="Выбрать все 2xx/3xx"
                     />
@@ -727,7 +593,8 @@ export const CheckUrls: React.FC<CheckUrlsProps> = ({ className }) => {
                         <CheckboxStyled
                           checked={r.selected}
                           disabled={!r.url || r.newStatus === null}
-                          onChange={() => toggle(r.id)}
+                          value={r.id}
+                          onChange={onChangeToggle}
                         />
                       </td>
                       <td>
@@ -780,7 +647,8 @@ export const CheckUrls: React.FC<CheckUrlsProps> = ({ className }) => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => removeRow(r.id)}
+                          onClick={removeRow}
+                          value={r.id}
                           aria-label="Удалить строку"
                         >
                           ×
@@ -807,7 +675,7 @@ export const CheckUrls: React.FC<CheckUrlsProps> = ({ className }) => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setExportOpen((v) => !v)}
+                onClick={exportOpenToggle}
                 disabled={stats.selected === 0}
               >
                 {exportOpen ? 'Скрыть список' : 'Подготовить к переобходу'}
@@ -851,61 +719,12 @@ export const CheckUrls: React.FC<CheckUrlsProps> = ({ className }) => {
       )}
 
       {manualOpen && (
-        <ModalOverlayStyled onClick={() => setManualOpen(false)}>
-          <ModalStyled onClick={(e) => e.stopPropagation()}>
-            <ModalHeadStyled>
-              <h3>Ввод URL вручную</h3>
-              <ModalCloseStyled
-                onClick={() => setManualOpen(false)}
-                aria-label="Закрыть"
-              >
-                ×
-              </ModalCloseStyled>
-            </ModalHeadStyled>
-            <ModalBodyStyled>
-              <Label tone="muted">
-                По одному URL или пути на строку. Можно указать старый статус и
-                дату обхода через запятую — формат экспорта Яндекс.Вебмастера
-                поддерживается.
-              </Label>
-              <TextareaStyled
-                value={manualText}
-                onChange={(e) => setManualText(e.target.value)}
-                placeholder={`/catalog/page.html\nhttps://example.com/article,404\n"/path","404","N/a","18.12.2017"`}
-                spellCheck={false}
-                autoFocus
-              />
-              <InlineNoticeStyled>
-                Короткие пути будут склеены с{' '}
-                <code>{normalizedOrigin || 'URL сайта'}</code>.
-              </InlineNoticeStyled>
-            </ModalBodyStyled>
-            <ModalFooterStyled>
-              <Button
-                variant="ghost"
-                size="md"
-                onClick={() => setManualText('')}
-              >
-                Очистить
-              </Button>
-              <Button
-                variant="ghost"
-                size="md"
-                onClick={() => setManualOpen(false)}
-              >
-                Отмена
-              </Button>
-              <Button
-                variant="primary"
-                size="md"
-                onClick={handleManualSubmit}
-                disabled={manualText.trim().length === 0}
-              >
-                Добавить в таблицу
-              </Button>
-            </ModalFooterStyled>
-          </ModalStyled>
-        </ModalOverlayStyled>
+        <CheckUrlsManualInput
+          manualOpen={manualOpen}
+          addRows={addRows}
+          siteOrigin={siteOrigin}
+          manualOpenOff={manualOpenOff}
+        />
       )}
     </WrapStyled>
   )

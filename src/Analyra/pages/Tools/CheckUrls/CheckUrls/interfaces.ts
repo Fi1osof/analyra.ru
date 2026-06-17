@@ -24,3 +24,15 @@ export interface CheckUrlRow {
 export interface CheckUrlsProps {
   className?: string
 }
+
+export interface ParsedRow {
+  raw: string
+  oldStatus: UrlStatus
+  lastCrawl: string | null
+}
+
+export type StatusFilter = 'all' | '2xx' | '3xx' | '4xx' | '5xx' | 'na'
+
+export function isStatusFilter(value: string): value is StatusFilter {
+  return ['all', '2xx', '3xx', '4xx', '5xx', 'na'].includes(value)
+}
