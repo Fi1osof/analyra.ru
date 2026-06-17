@@ -22,13 +22,14 @@ export const parseInput = (raw: string): ParsedRow[] => {
     if (/^url$/i.test(urlPart) || /^адрес/i.test(urlPart)) {
       continue
     }
-    const statusPart = parts.slice(1).find((p) => /^\d{3}$/.test(p))
+    const statusParts = parts.slice(1).filter((p) => /^\d{3}$/.test(p))
     const datePart = parts
       .slice(1)
       .find((p) => /^\d{1,2}[.\-/]\d{1,2}[.\-/]\d{2,4}$/.test(p))
     rows.push({
       raw: urlPart,
-      oldStatus: statusPart ? Number(statusPart) : null,
+      oldStatus: statusParts[0] ? Number(statusParts[0]) : null,
+      newStatus: statusParts[1] ? Number(statusParts[1]) : null,
       lastCrawl: datePart ?? null,
     })
   }
@@ -85,7 +86,7 @@ export const statusTone = (
 }
 
 export const isReindexable = (s: UrlStatus) =>
-  s === null && ((s && s >= 200 && s < 300) || (s && s >= 300 && s < 400))
+  s !== null && ((s >= 200 && s < 300) || (s >= 300 && s < 400))
 
 export const normalizeOrigin = (raw: string): string => {
   let v = raw.trim()

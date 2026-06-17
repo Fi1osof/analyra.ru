@@ -126,7 +126,7 @@ export const CheckUrls: React.FC<CheckUrlsProps> = ({ className }) => {
               url,
               validity,
               oldStatus: p.oldStatus,
-              newStatus: null,
+              newStatus: p.newStatus,
               lastCrawl: p.lastCrawl,
               checkedAt: null,
               selected: false,
@@ -616,7 +616,7 @@ export const CheckUrls: React.FC<CheckUrlsProps> = ({ className }) => {
                         </UrlCellStyled>
                       </td>
                       <td className="center">
-                        {r.oldStatus === null ? (
+                        {r.oldStatus !== null ? (
                           <StatusPillStyled $tone={statusTone(r.oldStatus)}>
                             {r.oldStatus}
                           </StatusPillStyled>
@@ -629,7 +629,7 @@ export const CheckUrls: React.FC<CheckUrlsProps> = ({ className }) => {
                           <LoadingDotsStyled aria-label="loading">
                             <span /> <span /> <span />
                           </LoadingDotsStyled>
-                        ) : r.newStatus === null ? (
+                        ) : r.newStatus !== null ? (
                           <StatusPillStyled $tone={statusTone(r.newStatus)}>
                             {r.newStatus}
                           </StatusPillStyled>

@@ -28,6 +28,7 @@ export interface CheckUrlsProps {
 export interface ParsedRow {
   raw: string
   oldStatus: UrlStatus
+  newStatus: UrlStatus
   lastCrawl: string | null
 }
 
