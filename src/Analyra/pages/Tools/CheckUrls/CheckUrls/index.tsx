@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   LinkIcon,
   CheckIcon,
@@ -50,7 +50,6 @@ import {
 } from './styles'
 import { Button, Input, Label } from 'src/Analyra/lovable/v1/src/ui-kit'
 import {
-  isReindexable,
   matchesFilter,
   // normalizeOrigin,
   parseInput,
@@ -93,14 +92,14 @@ export const CheckUrls: React.FC<CheckUrlsProps> = ({ className }) => {
   // const normalizedOrigin = useMemo(() => normalizeOrigin(siteOrigin), [siteOrigin])
 
   // re-resolve URLs whenever siteOrigin changes (so previously "needs-origin" rows update)
-  // useEffect(() => {
-  //   setRows((prev) =>
-  //     prev.map((r) => {
-  //       const { url, validity } = resolveUrl(r.raw, normalizedOrigin)
-  //       return { ...r, url, validity }
-  //     }),
-  //   )
-  // }, [normalizedOrigin])
+  useEffect(() => {
+    setRows((prev) =>
+      prev.map((r) => {
+        const { url, validity } = resolveUrl(r.raw, siteOrigin)
+        return { ...r, url, validity }
+      }),
+    )
+  }, [siteOrigin])
 
   // useEffect(
   //   () => () => {
@@ -133,7 +132,9 @@ export const CheckUrls: React.FC<CheckUrlsProps> = ({ className }) => {
               pending: false,
             }
           })
-        return [...prev, ...fresh]
+        return [...prev, ...fresh].sort(
+          (a, b) => a.raw.charCodeAt(0) - b.raw.charCodeAt(0),
+        )
       })
     },
     [siteOrigin],
@@ -213,7 +214,7 @@ export const CheckUrls: React.FC<CheckUrlsProps> = ({ className }) => {
       setRows((prev) =>
         prev.map<CheckUrlRow>((r) => ({
           ...r,
-          selected: next && isReindexable(r.newStatus) ? true : false,
+          selected: next && r.validity === 'ok' ? true : false,
         })),
       ),
     [],
@@ -344,8 +345,8 @@ export const CheckUrls: React.FC<CheckUrlsProps> = ({ className }) => {
   const allReindexableSelected = useMemo(() => {
     return (
       rows.length > 0 &&
-      rows.filter((r) => isReindexable(r.newStatus)).length > 0 &&
-      rows.filter((r) => isReindexable(r.newStatus)).every((r) => r.selected)
+      rows.filter((r) => r.validity === 'ok').length > 0 &&
+      rows.filter((r) => r.validity === 'ok').every((r) => r.selected)
     )
   }, [rows])
 
@@ -592,7 +593,7 @@ export const CheckUrls: React.FC<CheckUrlsProps> = ({ className }) => {
                       <td className="center">
                         <CheckboxStyled
                           checked={r.selected}
-                          disabled={!r.url || r.newStatus === null}
+                          disabled={!r.url}
                           value={r.id}
                           onChange={onChangeToggle}
                         />
@@ -669,7 +670,7 @@ export const CheckUrls: React.FC<CheckUrlsProps> = ({ className }) => {
           <ToolbarStyled>
             <InlineNoticeStyled>
               Выбрано <strong>&nbsp;{stats.selected}&nbsp;</strong> URL для
-              отправки на переобход. По умолчанию отмечены только 2xx/3xx.
+              отправки на переобход.
             </InlineNoticeStyled>
             <ActionsRowStyled>
               <Button

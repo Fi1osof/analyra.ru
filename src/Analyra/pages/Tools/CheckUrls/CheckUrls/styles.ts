@@ -36,7 +36,7 @@ export const FieldStyled = styled.div`
 `
 
 export const FieldLabelStyled = styled.label`
-  font-size: 13px;
+  font-size: 17px;
   font-weight: 600;
   color: ${({ theme }) => theme.color.text};
   display: inline-flex;
@@ -45,7 +45,6 @@ export const FieldLabelStyled = styled.label`
 `
 
 export const FieldHintStyled = styled.span`
-  font-size: 12px;
   color: ${({ theme }) => theme.color.muted};
   font-weight: 400;
 `
@@ -81,7 +80,7 @@ export const StatChipStyled = styled.div`
   border-radius: ${({ theme }) => theme.radius.pill};
   background: ${({ theme }) => theme.color.surface};
   border: 1px solid ${({ theme }) => theme.color.border};
-  font-size: 12px;
+
   color: ${({ theme }) => theme.color.textSoft};
   strong {
     color: ${({ theme }) => theme.color.text};
@@ -100,7 +99,7 @@ export const FilterBarStyled = styled.div`
 `
 
 export const FilterLabelStyled = styled.span`
-  font-size: 11px;
+  font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: ${({ theme }) => theme.color.muted};
@@ -118,7 +117,7 @@ export const FilterChipStyled = styled.button<{
   gap: 6px;
   padding: 5px 12px;
   border-radius: ${({ theme }) => theme.radius.pill};
-  font-size: 12px;
+
   font-weight: 600;
   cursor: pointer;
   transition: ${({ theme }) => theme.transition.fast};
@@ -184,7 +183,7 @@ export const TableWrapStyled = styled.div`
 export const TableStyled = styled.table`
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
+  font-size: 18px;
   th,
   td {
     text-align: left;
@@ -193,7 +192,7 @@ export const TableStyled = styled.table`
     vertical-align: middle;
   }
   th {
-    font-size: 11px;
+    font-size: 14px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: ${({ theme }) => theme.color.muted};
@@ -213,14 +212,14 @@ export const TableStyled = styled.table`
   }
   td.url {
     font-family: ${({ theme }) => theme.font.mono};
-    font-size: 12.5px;
+
     word-break: break-all;
     max-width: 520px;
     color: ${({ theme }) => theme.color.textSoft};
   }
   td.date {
     font-family: ${({ theme }) => theme.font.mono};
-    font-size: 12px;
+
     color: ${({ theme }) => theme.color.muted};
     white-space: nowrap;
   }
@@ -249,14 +248,14 @@ export const UrlCellStyled = styled.div`
 
 export const UrlMainStyled = styled.span<{ $muted?: boolean }>`
   font-family: ${({ theme }) => theme.font.mono};
-  font-size: 12.5px;
+
   color: ${({ theme, $muted }) =>
     $muted ? theme.color.muted : theme.color.text};
   word-break: break-all;
 `
 
 export const UrlMetaStyled = styled.span`
-  font-size: 11px;
+  font-size: 14px;
   color: ${({ theme }) => theme.color.danger};
   display: inline-flex;
   align-items: center;
@@ -285,7 +284,7 @@ export const StatusPillStyled = styled.span<{
   padding: 0 10px;
   border-radius: ${({ theme }) => theme.radius.pill};
   font-family: ${({ theme }) => theme.font.mono};
-  font-size: 12px;
+
   font-weight: 600;
   ${({ theme, $tone }) => {
     const map = {
@@ -324,7 +323,7 @@ export const LoadingDotsStyled = styled.span`
 export const DashStyled = styled.span`
   color: ${({ theme }) => theme.color.mutedSoft};
   font-family: ${({ theme }) => theme.font.mono};
-  font-size: 13px;
+  font-size: 17px;
 `
 
 export const EmptyStyled = styled.div`
@@ -348,7 +347,7 @@ export const EmptyTitleStyled = styled.div`
 `
 
 export const EmptyHintStyled = styled.div`
-  font-size: 13px;
+  font-size: 17px;
   max-width: 420px;
 `
 
@@ -375,7 +374,7 @@ export const FileButtonStyled = styled.label`
   border-radius: ${({ theme }) => theme.radius.md};
   border: 1px solid ${({ theme }) => theme.color.border};
   background: ${({ theme }) => theme.color.bg};
-  font-size: 13px;
+  font-size: 17px;
   font-weight: 500;
   color: ${({ theme }) => theme.color.text};
   cursor: pointer;
@@ -437,7 +436,7 @@ export const ModalCloseStyled = styled.button`
   background: transparent;
   color: ${({ theme }) => theme.color.muted};
   cursor: pointer;
-  font-size: 20px;
+  font-size: 24px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -465,7 +464,7 @@ export const ModalFooterStyled = styled.div`
 
 export const TextareaStyled = styled.textarea`
   font-family: ${({ theme }) => theme.font.mono};
-  font-size: 13px;
+  font-size: 17px;
   line-height: 1.55;
   width: 100%;
   min-height: 220px;
@@ -485,7 +484,7 @@ export const TextareaStyled = styled.textarea`
 
 export const ExportTextareaStyled = styled.textarea`
   font-family: ${({ theme }) => theme.font.mono};
-  font-size: 13px;
+  font-size: 17px;
   width: 100%;
   min-height: 160px;
   padding: 14px 16px;
@@ -501,7 +500,7 @@ export const InlineNoticeStyled = styled.div`
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+
   color: ${({ theme }) => theme.color.muted};
   code {
     font-family: ${({ theme }) => theme.font.mono};
