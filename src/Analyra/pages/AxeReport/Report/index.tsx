@@ -32,7 +32,7 @@ export const AxeReport: React.FC = () => {
   )
 
   const onClickSubmit = useCallback(
-    async (event?: React.MouseEvent | React.FormEvent) => {
+    async (event?: React.MouseEvent | React.SubmitEvent) => {
       event?.preventDefault()
       event?.stopPropagation()
 

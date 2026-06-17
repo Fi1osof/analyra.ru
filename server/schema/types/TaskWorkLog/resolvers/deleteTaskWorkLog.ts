@@ -12,9 +12,15 @@ builder.mutationField('deleteTaskWorkLog', (t) =>
         throw new Error('Not authenticated')
       }
 
+      const workLogId = args.where.id
+
+      if (!workLogId) {
+        throw new Error('WorkLog ID is required')
+      }
+
       const existing = await ctx.prisma.taskWorkLog.findFirst({
         where: {
-          id: args.where.id,
+          id: workLogId,
           createdById: ctx.currentUser.id,
         },
       })
@@ -25,7 +31,7 @@ builder.mutationField('deleteTaskWorkLog', (t) =>
 
       return ctx.prisma.taskWorkLog.delete({
         ...query,
-        where: { id: args.where.id },
+        where: { id: workLogId },
       })
     },
   }),

@@ -33,9 +33,6 @@ ENV NEXT_PUBLIC_WORLD3D_ENABLED $NEXT_PUBLIC_WORLD3D_ENABLED
 ARG NEXT_PUBLIC_CRYPTO_ENABLED
 ENV NEXT_PUBLIC_CRYPTO_ENABLED $NEXT_PUBLIC_CRYPTO_ENABLED
 
-ARG NEXT_PUBLIC_SITE_TITLE
-ENV NEXT_PUBLIC_SITE_TITLE $NEXT_PUBLIC_SITE_TITLE
-
 ARG NEXT_PUBLIC_MAIN_PAGE_TITLE
 ENV NEXT_PUBLIC_MAIN_PAGE_TITLE $NEXT_PUBLIC_MAIN_PAGE_TITLE
 
@@ -81,10 +78,7 @@ RUN npx playwright install --with-deps
 # Copy source
 COPY . .
 
-RUN npm run prisma:deploy
-RUN npm run generate
-RUN npm run prisma:seed
-
+RUN npm run prisma:deploy && npm run generate && npm run prisma:seed
 
 RUN if [ "$ENV_MODE" = "production" ] ; then yarn build ; fi
 

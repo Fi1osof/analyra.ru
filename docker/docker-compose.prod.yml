@@ -7,6 +7,9 @@ services:
       - 80:80
       - 443:443
 
+  varnish:
+    restart: unless-stopped
+
   app:
     restart: unless-stopped
     build:
@@ -23,12 +26,6 @@ services:
     restart: unless-stopped
   mailserver:
     restart: unless-stopped
-    ports:
-      - 25:25
-      - 465:465
-      - 587:587
-      - 143:143
-      - 993:993
   coturn:
     restart: unless-stopped
 
