@@ -1,5 +1,6 @@
 import { Logo, Navbar } from 'src/Analyra/lovable/v1/src/ui-kit'
 import { AnalyraLayoutStyled, FooterInnerStyled, FooterStyled } from './styles'
+import { ChatWidget } from 'src/components/Chat/ChatWidget'
 
 export const AnalyraLayout: React.FC<React.PropsWithChildren> = ({
   children,
@@ -16,6 +17,8 @@ export const AnalyraLayout: React.FC<React.PropsWithChildren> = ({
           <span>© {new Date().getFullYear()} Analyra. Все права защищены.</span>
         </FooterInnerStyled>
       </FooterStyled>
+
+      <ChatWidget />
     </AnalyraLayoutStyled>
   )
 }

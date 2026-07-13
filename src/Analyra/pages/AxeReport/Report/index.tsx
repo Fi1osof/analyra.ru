@@ -8,7 +8,7 @@ import { AxeReportView } from './View'
 import { AxeReportSkeleton } from './Skeleton'
 import { AxeReportStyled } from './styles'
 import { useRouter } from 'next/router'
-import { AnalyzeForm } from 'src/components/pages/MainPage/AnalyzeForm'
+import { AnalyzeForm } from '../../MainPage/AnalyzeForm'
 
 export const AxeReport: React.FC = () => {
   const { addMessage } = useSnackbar() || {}

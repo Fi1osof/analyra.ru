@@ -1,1 +1,1 @@
-export { MainPage as default } from 'src/components/pages/MainPage'
+export { AnalyraMainPage as default } from 'src/Analyra/pages/MainPage'
