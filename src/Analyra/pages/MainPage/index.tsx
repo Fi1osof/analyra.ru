@@ -135,7 +135,7 @@ const audience = [
   'UX/UI специалисты',
 ]
 
-export const AnalyraMainPage: Page = () => {
+export const AnalyraMainPage: Page = ({ siteOrigin }) => {
   const siteTitle = 'Analyra — AI-анализ сайтов и пользовательских сценариев'
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || ''
 
@@ -173,6 +173,8 @@ export const AnalyraMainPage: Page = () => {
         <SeoHeaders
           title={siteTitle}
           description="AI-агент изучает ваш сайт, проходит сценарии пользователей, находит UX-проблемы и предлагает задачи на улучшение продукта."
+          canonical={'/'}
+          siteOrigin={siteOrigin}
         />
       )}
       <JsonLd

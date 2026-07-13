@@ -76,16 +76,24 @@ export const createOrganization = (
   ...data,
 })
 
-export const createBreadcrumbList = (
-  items: { name: string; url?: string }[],
-): WithContext<'BreadcrumbList'> & BreadcrumbListSchema => ({
+export const createBreadcrumbList = ({
+  items,
+  siteOrigin,
+}: {
+  items: { name: string; url?: string }[]
+  siteOrigin: string
+}): WithContext<'BreadcrumbList'> & BreadcrumbListSchema => ({
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: items.map((item, index) => ({
     '@type': 'ListItem' as const,
     position: index + 1,
     name: item.name,
-    item: item.url,
+    item: !item.url
+      ? undefined
+      : item.url === '/'
+        ? siteOrigin
+        : `${siteOrigin}${item.url}`,
   })),
 })
 

@@ -17,9 +17,9 @@ export const Navbar: React.FC<NavbarProps> = ({ className }) => (
         <Logo size={22} />
       </Link>
       <NavbarLinksStyled>
-        <Link href={'/tools'} title="Инструменты">
+        {/* <Link href={'/tools'} title="Инструменты">
           Инструменты
-        </Link>
+        </Link> */}
         {/* <a href="/#features">Возможности</a> */}
         {/* <a href="/#example">Пример</a> */}
         {/* <a href="/#how">Как это работает</a> */}

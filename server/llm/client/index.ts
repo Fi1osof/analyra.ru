@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import {
   LLMClientChatCompletionRequest,
   LLMClientCompletionRequest,
@@ -14,6 +13,7 @@ import {
   LLMUsage,
   LLMChoice,
   LLMChoiceMessage,
+  LLM_TOP_MODELS,
 } from './interfaces'
 
 interface ProviderConfig {
@@ -143,14 +143,13 @@ export class LLMClient {
     })
 
     if (!response.ok) {
+      const errorText = await response.text()
       throw new Error(
-        `[llmClient] ${method} ${url} failed with status ${response.status}`,
+        `[llmClient] ${method} ${url} failed with status ${response.status}: ${errorText}`,
       )
     }
 
     const result: T = await response.json()
-
-    console.log('result', JSON.stringify(result, null, 2))
 
     return result
   }
@@ -227,6 +226,13 @@ export class LLMClient {
     model: LlmModel,
     request: LLMClientImageGenerationRequest,
   ): Promise<LLMResponse> {
+    if (
+      LLM_TOP_MODELS.includes(model) &&
+      process.env.LLM_ALLOW_TOP_MODELS !== 'true'
+    ) {
+      throw new Error('LLM top models is not allowed')
+    }
+
     const raw = await this.fetch<LLMClientRawImageGenerationResponse>(
       provider,
       '/chat/completions',
@@ -234,7 +240,13 @@ export class LLMClient {
         method: 'POST',
         body: JSON.stringify({ ...request, model }),
       },
-    )
+    ).catch((error) => {
+      if (process.env.NODE_ENV === 'development') {
+        console.error(error)
+      }
+
+      throw error
+    })
 
     if (raw.error) {
       throw new Error(raw.error.message || 'Image generation failed')

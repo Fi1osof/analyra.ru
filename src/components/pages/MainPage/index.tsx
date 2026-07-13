@@ -12,7 +12,6 @@ export const MainPage: Page = (props) => {
       {siteTitle && (
         <SeoHeaders
           title={siteTitle}
-          // @ts-expect-error types
           canonical={'/'}
           siteOrigin={props.siteOrigin}
         />
@@ -21,7 +20,6 @@ export const MainPage: Page = (props) => {
         <JsonLd
           data={createWebSite({
             name: siteTitle || '',
-            // @ts-expect-error types
             url: siteUrl,
           })}
         />

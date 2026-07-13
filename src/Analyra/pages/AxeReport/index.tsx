@@ -5,7 +5,13 @@ import { AxeReport } from './Report'
 export const AxeReportPage: Page = () => {
   return (
     <>
-      <SeoHeaders title="Axe Report" noindex nofollow />
+      <SeoHeaders
+        title="Axe Report"
+        noindex
+        nofollow
+        canonical={undefined}
+        siteOrigin={undefined}
+      />
 
       <AxeReport />
     </>
