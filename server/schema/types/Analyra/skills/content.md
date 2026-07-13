@@ -6,7 +6,25 @@ Full SEO and technical audit of a web page using headless browser.
 
 ```graphql
 mutation analyzeWebPage($input: AnalyzeWebPageInput!) {
-  analyzeWebPage(input: $input)
+  analyzeWebPage(input: $input) {
+    device
+    errors
+    favicon
+    finalUrl
+    httpHeaders
+    images
+    links
+    loadTime
+    meta
+    openGraph
+    performance
+    screenshots
+    statusCode
+    structuredData
+    timestamp
+    twitterCards
+    url
+  }
 }
 ```
 
@@ -21,25 +39,6 @@ input AnalyzeWebPageInput {
   userAgent: String
   acceptLanguage: String
   runAccessibilityCheck: Boolean
-}
-{
-  device
-  errors
-  favicon
-  finalUrl
-  httpHeaders
-  images
-  links
-  loadTime
-  meta
-  openGraph
-  performance
-  screenshots
-  statusCode
-  structuredData
-  timestamp
-  twitterCards
-  url
 }
 ```
 
@@ -181,7 +180,9 @@ input AnalyzeWebPageInput {
 
 ```graphql
 mutation {
-  analyzeWebPage(input: { url: "https://example.com" })
+  analyzeWebPage(input: { url: "https://example.com" }) {
+    ...
+  }
 }
 ```
 
@@ -189,7 +190,9 @@ mutation {
 
 ```graphql
 mutation {
-  analyzeWebPage(input: { url: "https://example.com", device: mobile })
+  analyzeWebPage(input: { url: "https://example.com", device: mobile }) {
+    ...
+  }
 }
 ```
 
@@ -198,7 +201,9 @@ mutation {
 ```graphql
 mutation {
   analyzeWebPage(
-    input: { url: "https://example.com", runAccessibilityCheck: true }
+    input: { url: "https://example.com", runAccessibilityCheck: true } {
+      ...
+    }
   )
 }
 ```

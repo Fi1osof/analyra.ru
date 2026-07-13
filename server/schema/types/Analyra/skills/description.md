@@ -1,5 +1,7 @@
-# Analyze Web Page
+# Анализ веб-страницы
 
-Full SEO and technical audit of a web page using headless browser (Playwright).
+Главный инструмент агента. Полный SEO и технический аудит веб-страницы через headless-браузер (Playwright).
 
-Read skill details
+Используй для: анализа мета-тегов, производительности (Core Web Vitals), структуры заголовков, ссылок, изображений, Open Graph, Twitter Cards, структурированных данных, доступности.
+
+Читай детали скила для полного списка параметров и примеров.

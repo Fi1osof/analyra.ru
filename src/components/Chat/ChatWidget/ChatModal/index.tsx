@@ -27,7 +27,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({
     e.stopPropagation()
   }, [])
 
-  const { containerRef } = useStopPropagationScroll()
+  const { containerRef: _containerRef } = useStopPropagationScroll()
 
   const modalContent = (
     <ChatWindow
@@ -36,7 +36,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({
       onMouseDown={stopPropagation}
       onTouchStart={stopPropagation}
       onTouchMove={stopPropagation}
-      ref={containerRef}
+      // ref={containerRef}
     >
       <ChatHeader>
         <ChatTitle>AI Assistant</ChatTitle>
